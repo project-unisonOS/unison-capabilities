@@ -1,0 +1,23 @@
+[Unit]
+Description=Unison Capability Resolver (unison-capability)
+After=network.target
+
+[Service]
+Type=simple
+User=unison
+Group=unison
+Environment=UNISON_CAPABILITY_CONFIG=/etc/unison/unison-capability.yaml
+WorkingDirectory=/opt/unison-capability
+ExecStart=/usr/bin/python3 /opt/unison-capability/src/server.py
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/unison/capabilities /run/unison
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
+

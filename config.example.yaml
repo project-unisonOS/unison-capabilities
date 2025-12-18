@@ -1,0 +1,48 @@
+service_name: unison-capability
+version: 0.1.0
+schema_version: capability.manifest.v0.1
+
+bind:
+  # Safe default: listen on loopback only. For sidecar deployments, keep this loopback.
+  host: 127.0.0.1
+  port: 8102
+  # Alternative: bind to a UNIX socket (recommended when deploying on a single host).
+  # uds_path: /run/unison/unison-capability.sock
+
+auth:
+  # unison_jwt: verify Bearer JWT/service tokens (preferred; integrates with unison-auth via unison-common).
+  # static_bearer: compare Authorization Bearer against a configured token (dev-only fallback).
+  # disabled: requires unsafe_allow_no_auth=true (dev-only; off by default).
+  mode: unison_jwt
+  # static_bearer_token: change-me
+  unsafe_allow_no_auth: false
+
+authz:
+  # Read-only operations
+  read_roles: [service, operator, admin]
+  # Runtime operations
+  run_roles: [service, operator, admin]
+  # Privileged lifecycle operations
+  admin_roles: [operator, admin]
+
+  # Optional allowlists to permit specific service principals to install/remove even if they only have the `service` role.
+  install_allowed_services: [service-orchestrator]
+  remove_allowed_services: [service-orchestrator]
+
+store:
+  # Base directory for manifests/payloads/tmp/locks/cache/logs.
+  base_dir: /var/lib/unison/capabilities
+
+egress:
+  # Safe default: deny all non-loopback egress unless explicitly allowlisted.
+  allowlist: []
+  denylist: []
+  # If true, private destinations (RFC1918/link-local) are allowed *only when also allowlisted*.
+  allow_private_networks: false
+
+registries:
+  # Optional static catalog (known-good deterministic entries).
+  # static_catalog_path: /app/registries/static_catalog.json
+
+  # Optional HTTPS JSON catalogs (treated as untrusted by default; require egress allowlist).
+  http_catalog_urls: []

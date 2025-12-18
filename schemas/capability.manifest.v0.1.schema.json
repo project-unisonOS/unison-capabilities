@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-unisonos.github.io/schemas/capability.manifest.v0.1.schema.json",
+  "title": "UnisonOS Capability Manifest v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "type",
+    "version",
+    "description",
+    "origin",
+    "interfaces",
+    "permissions",
+    "runtime",
+    "trust_level"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": {
+      "type": "string",
+      "enum": ["tool", "mcp_server", "skill_pack", "a2a_peer", "agent_workflow"]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+    },
+    "description": { "type": "string", "minLength": 1 },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "digest"],
+      "properties": {
+        "source": { "type": "string", "enum": ["url", "local"] },
+        "digest": {
+          "type": "string",
+          "anyOf": [
+            { "pattern": "^[0-9a-fA-F]{64}$" },
+            { "pattern": "^sha256:[0-9a-fA-F]{64}$" }
+          ]
+        },
+        "signature": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "path": { "type": "string" }
+      }
+    },
+    "interfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "outputs"],
+      "properties": {
+        "inputs": { "type": "object" },
+        "outputs": { "type": "object" }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["network", "filesystem", "devices"],
+      "properties": {
+        "network": {
+          "type": "string",
+          "enum": ["deny", "allowlist"]
+        },
+        "filesystem": {
+          "type": "string",
+          "enum": ["read", "write", "none"]
+        },
+        "devices": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "network_allowlist": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sandbox", "resources"],
+      "properties": {
+        "sandbox": { "type": "string", "enum": ["process", "container"] },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cpu", "memory"],
+          "properties": {
+            "cpu": { "type": "string" },
+            "memory": { "type": "string" }
+          }
+        },
+        "timeout_seconds": { "type": "number", "minimum": 0 }
+      }
+    },
+    "trust_level": {
+      "type": "string",
+      "enum": ["local", "verified", "community", "untrusted"]
+    },
+    "enabled": { "type": "boolean" },
+    "requires_oauth": { "type": "boolean" },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "channel": { "type": "string", "enum": ["programmatic", "vdi_vpn"] }
+      }
+    },
+    "secrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "ref"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "ref": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["command", "python", "mcp_tool", "a2a_rpc"] },
+        "command": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["argv"],
+          "properties": {
+            "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+          }
+        },
+        "python": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["callable"],
+          "properties": {
+            "callable": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_\\.]*:[A-Za-z_][A-Za-z0-9_]*$" }
+          }
+        },
+        "mcp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["registry_url", "tool_name"],
+          "properties": {
+            "registry_url": { "type": "string", "format": "uri" },
+            "tool_name": { "type": "string", "minLength": 1 },
+            "server_id": { "type": "string" }
+          }
+        },
+        "a2a": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["endpoint"],
+          "properties": {
+            "endpoint": { "type": "string", "format": "uri" }
+          }
+        }
+      }
+    }
+  }
+}

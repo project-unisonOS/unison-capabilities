@@ -1,0 +1,19 @@
+{
+  "capabilities": [
+    {
+      "id": "registry.example.echo",
+      "type": "tool",
+      "version": "0.1.0",
+      "description": "Example registry tool (local python echo)",
+      "origin": { "source": "local", "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "path": "seed" },
+      "interfaces": { "inputs": { "type": "object", "properties": { "text": { "type": "string" } } }, "outputs": { "type": "object" } },
+      "permissions": { "network": "deny", "filesystem": "none", "devices": [] },
+      "runtime": { "sandbox": "process", "resources": { "cpu": "default", "memory": "default" }, "timeout_seconds": 5 },
+      "trust_level": "community",
+      "enabled": true,
+      "execution": { "channel": "programmatic" },
+      "implementation": { "kind": "python", "python": { "callable": "capability_builtins:echo" } }
+    }
+  ]
+}
+
