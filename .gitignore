@@ -7,3 +7,6 @@ __pycache__/
 
 # Runtime store paths (examples)
 /var/
+
+# Local archive for process/planning docs removed from the repo root
+.docs-archive/
