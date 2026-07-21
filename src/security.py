@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from typing import Any, Callable, Dict, List, Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -11,9 +12,13 @@ from config import AuthConfig, AuthzConfig, BindConfig
 
 try:
     from unison_common.auth import verify_service_token, verify_token
+    from unison_common.auth import verify_token_with_auth_service
+    from unison_common.principal import principal_context_from_claims
 except Exception:  # pragma: no cover
     verify_service_token = None
     verify_token = None
+    verify_token_with_auth_service = None
+    principal_context_from_claims = None
 
 
 _http_bearer = HTTPBearer(auto_error=False)
@@ -37,6 +42,8 @@ class LocalOnlyMiddleware(BaseHTTPMiddleware):
 
 
 async def _static_bearer_auth(auth: AuthConfig, credentials: Optional[HTTPAuthorizationCredentials]) -> Dict[str, Any]:
+    if os.getenv("ENVIRONMENT", "development").lower() in {"prod", "production"}:
+        raise HTTPException(status_code=500, detail="static bearer authentication is forbidden in production")
     if not credentials or credentials.scheme.lower() != "bearer":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="authentication required")
     if not auth.static_bearer_token:
@@ -47,7 +54,7 @@ async def _static_bearer_auth(auth: AuthConfig, credentials: Optional[HTTPAuthor
 
 
 def make_auth_dependency(auth: AuthConfig) -> Callable[..., Any]:
-    async def dep(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_http_bearer)) -> Dict[str, Any]:
+    async def dep(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(_http_bearer)) -> Dict[str, Any]:
         if auth.mode == "disabled":
             if not auth.unsafe_allow_no_auth:
                 raise HTTPException(status_code=500, detail="auth disabled but unsafe flag not set")
@@ -57,10 +64,26 @@ def make_auth_dependency(auth: AuthConfig) -> Callable[..., Any]:
             return await _static_bearer_auth(auth, credentials)
 
         if auth.mode == "unison_jwt":
-            if verify_service_token is None:
+            if verify_token is None or verify_token_with_auth_service is None or principal_context_from_claims is None:
                 raise HTTPException(status_code=500, detail="unison-common not available for jwt verification")
-            # Prefer service token verification for inter-service calls.
-            return await verify_service_token(credentials)
+            claims = await verify_token(credentials)
+            active = await verify_token_with_auth_service(credentials.credentials)
+            if not active or not active.get("valid"):
+                raise HTTPException(status_code=401, detail="principal session is inactive")
+            claims = dict(active.get("claims") or claims)
+            try:
+                context = principal_context_from_claims(claims, expected_audience="capability")
+            except ValueError as exc:
+                raise HTTPException(status_code=403, detail="principal audience or binding is invalid") from exc
+            request.state.principal_context = context
+            return {
+                "username": context.login_handle or context.principal_id,
+                "principal_id": context.principal_id,
+                "person_id": context.person_id,
+                "roles": list(context.roles),
+                "token_type": claims.get("type"),
+                "exp": context.expires_at,
+            }
 
         raise HTTPException(status_code=500, detail=f"unsupported auth mode: {auth.mode}")
 

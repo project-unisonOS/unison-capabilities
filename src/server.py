@@ -32,11 +32,15 @@ try:
     from unison_common.logging import configure_logging, log_json
     from unison_common.tracing_middleware import TracingMiddleware
     from unison_common.audit_middleware import AuditMiddleware
+    from unison_common.principal import bind_identity
+    from unison_common.principal_middleware import get_bound_principal
 except Exception:  # pragma: no cover
     configure_logging = None
     log_json = None
     TracingMiddleware = None
     AuditMiddleware = None
+    bind_identity = None
+    get_bound_principal = None
 
 
 _start_time = time.time()
@@ -348,6 +352,8 @@ def create_app(config: ServiceConfig, *, egress_controller: EgressController | N
         try:
             capability_id = payload.get("capability_id")
             args = payload.get("args") if isinstance(payload.get("args"), dict) else {}
+            if bind_identity is not None and get_bound_principal is not None and config.auth.mode == "unison_jwt":
+                args = bind_identity(args, get_bound_principal(request))
             if not capability_id:
                 raise CapabilityManifestError("capability_id required")
             audit.emit(
