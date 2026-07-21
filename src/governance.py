@@ -28,6 +28,9 @@ def validate_governance_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
         raise CapabilityPolicyError("unknown capability risk")
     if float(governance["timeout_seconds"]) <= 0 or float(governance["timeout_seconds"]) > 300:
         raise CapabilityPolicyError("capability timeout is outside the bounded range")
+    forbidden = {"*", "/", "/**", "0.0.0.0/0", "::/0"}
+    if forbidden.intersection(governance["filesystem"]) or forbidden.intersection(governance["egress"]):
+        raise CapabilityPolicyError("broad filesystem or egress authority is prohibited")
     if not governance["signature"] or not governance["revocation_id"]:
         raise CapabilityPolicyError("signature and revocation identity are required")
     return manifest
