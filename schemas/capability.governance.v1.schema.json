@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://project-unisonos.github.io/schemas/capability.governance.v1.schema.json",
+  "$id": "https://project-unisonos.github.io/schemas/capability-governance.v1.schema.json",
   "type": "object",
   "required": ["governance_version", "governance"],
   "properties": {
@@ -9,9 +9,8 @@
       "type": "object", "additionalProperties": false,
       "required": ["actions", "data_read", "data_write", "recipient_classes", "execution_location", "risk", "reversible", "cost_ceiling", "confirmation", "accessibility", "audit", "retention", "egress", "filesystem", "devices", "timeout_seconds", "resource_limits", "signature", "revocation_id"],
       "properties": {
-        "actions": {"type": "array", "minItems": 1, "items": {"type": "string"}},
-        "data_read": {"type": "array", "items": {"type": "string"}}, "data_write": {"type": "array", "items": {"type": "string"}},
-        "recipient_classes": {"type": "array", "items": {"type": "string"}},
+        "actions": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "data_read": {"type": "array", "items": {"type": "string"}},
+        "data_write": {"type": "array", "items": {"type": "string"}}, "recipient_classes": {"type": "array", "items": {"type": "string"}},
         "execution_location": {"enum": ["device", "sandboxed-container"]}, "risk": {"enum": ["low", "medium", "high", "critical"]},
         "reversible": {"type": "boolean"}, "cost_ceiling": {"type": "string"}, "confirmation": {"type": "string"},
         "accessibility": {"type": "object"}, "audit": {"type": "object"}, "retention": {"type": "object"},
