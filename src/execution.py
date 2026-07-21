@@ -4,6 +4,7 @@ import importlib
 import inspect
 import json
 import subprocess
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
@@ -38,9 +39,15 @@ class ExecutionEngine:
                 if not isinstance(extra, list) or not all(isinstance(x, str) for x in extra):
                     raise CapabilityRunError("args.argv_extra must be a list of strings")
                 argv = list(argv) + list(extra)
-            timeout = (manifest.get("runtime") or {}).get("timeout_seconds") or 30
+            timeout = min(float((manifest.get("runtime") or {}).get("timeout_seconds") or 30), 300.0)
             try:
-                proc = subprocess.run(argv, capture_output=True, text=True, timeout=float(timeout), check=False)
+                # Commands receive a deliberately minimal environment. Credentials are
+                # injected by the broker at the transport edge, never inherited here.
+                safe_env = {key: value for key, value in os.environ.items() if key in {"LANG", "LC_ALL", "TZ"}}
+                proc = subprocess.run(  # nosec B603 - argv is a validated static list; shell is never enabled.
+                    argv, capture_output=True, text=True, timeout=timeout, check=False,
+                    shell=False, env=safe_env, close_fds=True,
+                )
             except Exception as exc:
                 raise CapabilityRunError(f"command execution failed: {exc}") from exc
             return {"returncode": proc.returncode, "stdout": proc.stdout, "stderr": proc.stderr}
