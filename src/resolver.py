@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -279,7 +280,8 @@ class CapabilityResolver:
                     requested_channel = maybe
             manifest = self.get(capability_id=capability_id, version=str(version) if version else None)
             self.policy.enforce_run(manifest, requested_channel=str(requested_channel) if requested_channel else None)
-            if manifest.get("governance_version") == "unison.capability-governance.v1":
+            is_governed = manifest.get("governance_version") == "unison.capability-governance.v1"
+            if is_governed or os.getenv("UNISON_CAPABILITY_ALLOW_LEGACY", "false").lower() != "true":
                 authority = args.get("authority") if isinstance(args.get("authority"), dict) else {}
                 authorize_execution(manifest, authority)
                 _AUTHORITY_REPLAY_GUARD.consume(str(authority["nonce"]))

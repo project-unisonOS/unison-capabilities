@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 
 def pytest_configure() -> None:
+    # Historical fixture coverage is explicit compatibility-only. Production
+    # defaults keep unversioned manifests disabled.
+    os.environ.setdefault("UNISON_CAPABILITY_ALLOW_LEGACY", "true")
     repo_root = Path(__file__).resolve().parents[1]
     src = repo_root / "src"
     if str(src) not in sys.path:
