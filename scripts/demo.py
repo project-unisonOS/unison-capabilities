@@ -16,7 +16,7 @@ from execution import ExecutionEngine
 from oauth import OAuthManager
 from policy import CapabilityPolicy
 from resolver import CapabilityResolver
-from secrets import FileFernetSecretsBackend
+from credential_secrets import FileFernetSecretsBackend
 from store import CapabilityStore
 
 
