@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from audit import AuditEmitter
 from egress import EgressController
 from errors import CapabilityPolicyError, CapabilityRunError
-from secrets import FileFernetSecretsBackend, SecretsBackend
+from credential_secrets import FileFernetSecretsBackend, SecretsBackend
 from store import CapabilityStore
 
 
@@ -244,4 +244,3 @@ class OAuthManager:
 def default_oauth_manager(*, store: CapabilityStore, egress: EgressController) -> OAuthManager:
     secrets = FileFernetSecretsBackend.from_env(base_dir=store.base_dir)
     return OAuthManager(store=store, secrets=secrets, egress=egress)
-
