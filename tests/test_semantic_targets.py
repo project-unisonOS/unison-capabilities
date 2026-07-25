@@ -1,6 +1,6 @@
 import pytest
 
-from src.semantic_targets import SemanticTargetAuthority, TargetBindingError
+from semantic_targets import SemanticTargetAuthority, TargetBindingError
 
 
 def test_target_is_revalidated_immediately_before_action():
